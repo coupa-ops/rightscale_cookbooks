@@ -352,7 +352,7 @@ action :install_client do
 
     node[:db_mysql][:client_packages_install] = value_for_platform(
       ["centos", "redhat"] => {
-        "default" => ["percona-server-client-56"]
+        "default" => ["Percona-Server-client-56"]
       },
       "ubuntu" => {
         "10.04" => [],
