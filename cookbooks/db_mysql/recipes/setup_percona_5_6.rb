@@ -43,7 +43,7 @@ node[:db_mysql][:server_packages_install] = value_for_platform(
     "10.04" => [],
     "default" => ["percona-server-server-5.6", "percona-toolkit", "percona-playback"]
   },
-  "default" => ["Percona-Server-server-56", "percona-toolkit", "percona-playback"]
+  "default" => ["Percona-Server-server-56"]
 )
 
 node[:db][:init_timeout] = node[:db_mysql][:init_timeout]
