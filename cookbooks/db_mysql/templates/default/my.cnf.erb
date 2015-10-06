@@ -54,7 +54,6 @@ wait_timeout                  = <%= @wait_timeout %>
 net_read_timeout              = <%= @net_read_timeout %>
 net_write_timeout             = <%= @net_write_timeout %>
 back_log                      = <%= @back_log %>
-table_cache                   = <%= @table_cache %>
 max_heap_table_size           = <%= @max_heap_table_size %>
 
 sort_buffer_size              = <%= @sort_buffer_size %>
@@ -62,7 +61,8 @@ read_buffer_size              = <%= @read_buffer_size %>
 read_rnd_buffer_size          = <%= @read_rnd_buffer_size %>
 myisam_sort_buffer_size       = <%= @myisam_sort_buffer_size %>
 net_buffer_length             = <%= @net_buffer_length %>
-
+table_open_cache              = 1024
+table_definition_cache        = 1024
 #
 # * Query Cache Configuration
 #
@@ -76,7 +76,6 @@ query_cache_size              = <%= @query_cache_size %>
 <%= @log_error %>
 <%= @log_slow_queries %>
 <%= @long_query_time %>
-log-queries-not-using-indexes
 
 <%= "read_only = 1" unless @read_only == nil %>
 server-id               = <%= @server_id %>
@@ -93,7 +92,6 @@ max_binlog_size         = 100M
 innodb_data_home_dir            = /var/lib/mysql/
 innodb_data_file_path           = ibdata1:10M:autoextend
 innodb_log_group_home_dir       = /var/lib/mysql
-innodb_file_per_table
 innodb_buffer_pool_size         = <%= @innodb_buffer_pool_size %>
 innodb_additional_mem_pool_size = <%= @innodb_additional_mem_pool_size %>
 innodb_log_file_size            = <%= @innodb_log_file_size %>

@@ -33,7 +33,7 @@ node[:db_mysql][:service_name] = value_for_platform(
     "10.04" => "",
     "default" => "mysql"
   },
-  "default" => "mysqld"
+  "default" => "mysql"
 )
 
 node[:db_mysql][:server_packages_uninstall] = []
