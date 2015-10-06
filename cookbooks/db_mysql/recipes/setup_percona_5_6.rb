@@ -54,7 +54,7 @@ node[:db][:info_file_location] = "/etc/mysql"
 
 log "  Using MySQL service name: #{node[:db_mysql][:service_name]}"
 
-case platform
+case node[:platform]
 when "redhat", "centos"
   execute "yum-add-percona-repo" do
     command "yum install -y http://www.percona.com/downloads/percona-release/redhat/0.1-3/percona-release-0.1-3.noarch.rpm"
