@@ -56,11 +56,12 @@ log "  Using MySQL service name: #{node[:db_mysql][:service_name]}"
 
 case node[:platform]
 when "redhat", "centos"
-  execute "yum-add-percona-repo" do
+  r = execute "yum-add-percona-repo" do
     command "yum install -y http://www.percona.com/downloads/percona-release/redhat/0.1-3/percona-release-0.1-3.noarch.rpm"
-    action :run
+    action :nothing
     not_if "rpm -qa|grep -q percona-release"
   end
+  r.run_action(:run)
 when "ubuntu"
   include_recipe "apt"
   
