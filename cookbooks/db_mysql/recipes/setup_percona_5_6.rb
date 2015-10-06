@@ -59,6 +59,7 @@ when "redhat", "centos"
   execute "yum-add-percona-repo" do
     command "yum install -y http://www.percona.com/downloads/percona-release/redhat/0.1-3/percona-release-0.1-3.noarch.rpm"
     action :run
+    not_if "rpm -qa|grep -q percona-release"
   end
 when "ubuntu"
   include_recipe "apt"
