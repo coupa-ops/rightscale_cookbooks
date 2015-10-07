@@ -739,6 +739,7 @@ attribute "db/ephemeral__volume_size",
   :required     => "recommended",
   :default      => "10"
 
+=begin
 attribute "db/ephemeral_volume_nickname",
   :description  => "The name displayed in the dashboard for volumes and to uniquely identify LVM volume groups.",
   :recipes      => ["db::create_ephemeral"],
@@ -746,3 +747,4 @@ attribute "db/ephemeral_volume_nickname",
   :display_name => "ephemeral_volume_nickname",
   :required     => "recommended",
   :default      => "ephemeral"
+=end
