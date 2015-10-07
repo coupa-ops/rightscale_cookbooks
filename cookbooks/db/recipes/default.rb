@@ -17,7 +17,15 @@ end
 db_vers = node[:db][:version]
         case db_vers
         when "5.6"
-                node[:db][:data_dir] = '/mnt/ephemeral/mysql'
+                #node[:db][:data_dir] = '/mnt/ephemeral/mysql'
+                device = get_device_or_default(node, node[:block_device])
+                if device
+                  mount_point = node[:block_device][:devices][:device1][:mount_point] if node[:block_device][:devices].include?(:device1)
+                  if !mount_point.nil? && !mount_point.empty?
+                    node[:db][:data_dir] = mount_point.concat("/mysql")
+                  end
+                end
+
                 directory "#{node[:db][:data_dir]}" do
                   owner "root"
                   group "root"

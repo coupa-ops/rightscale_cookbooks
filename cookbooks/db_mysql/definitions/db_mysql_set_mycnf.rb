@@ -74,7 +74,7 @@ define(:db_mysql_set_mycnf,
   node[:db_mysql][:tunable][:read_rnd_buffer_size] ||=
     value_with_units(4, "M", usage)
   node[:db_mysql][:tunable][:log_slow_queries] ||=
-    "slow_query_log_file = /var/log/mysql/mysqlslow.log\nslow_query_log = 1"
+    "slow_query_log_file = /var/log/mysqlslow.log\nslow_query_log = 1"
     #using percona 5.6 format instead of old one
     #"log_slow_queries = /var/log/mysqlslow.log"
   node[:db_mysql][:tunable][:long_query_time] ||= "long_query_time = 5"
