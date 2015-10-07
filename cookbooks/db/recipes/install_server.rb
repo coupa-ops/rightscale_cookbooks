@@ -89,6 +89,7 @@ db_set_privileges [
   {:role => "user", :username => node[:db][:application][:user], :password => node[:db][:application][:password]}
 ]
 
+=begin
 if node[:db][:version] = "5.6"
         DATA_DIR = node[:db][:data_dir]
 
@@ -100,4 +101,4 @@ if node[:db][:version] = "5.6"
           action [:move_data_dir, :start]
         end
 end
-
+=end
