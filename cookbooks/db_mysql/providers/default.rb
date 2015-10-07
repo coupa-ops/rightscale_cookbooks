@@ -404,6 +404,14 @@ action :install_client do
   end
   log "  Gem reload forced with Gem.clear_paths"
 
+  #This package causes conflicts with collectd-mysql and innotop
+  #Removing it after building mysql gem
+  package "Percona-Server-devel-56" do
+    action :remove
+    options "--nodeps"
+    ignore_failure true
+    provider Chef::Provider::Package::Rpm
+  end
 end
 
 # Installs MySQL database server
