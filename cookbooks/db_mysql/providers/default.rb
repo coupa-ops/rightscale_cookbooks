@@ -261,8 +261,19 @@ end
 action :pre_backup_check do
   # See cookbooks/db_mysql/libraries/helper.rb for the "init" method.
   # See "rightscale_tools" gem for the "pre_backup_check" method.
-  @db = init(new_resource)
-  @db.pre_backup_check
+
+  case node[:platform]
+   when "centos"
+     #fooling righscale_tools gem to make it use service mysql instead of mysqld
+     `cp /etc/centos-release /etc/centos-release_back`
+     `echo "CentOS release 5.7 (Final)"> /etc/centos-release`
+     @db = init(new_resource)
+     @db.pre_backup_check
+     `cp /etc/centos-release_back /etc/centos-release`
+   else
+     @db = init(new_resource)
+     @db.pre_backup_check
+   end
 end
 
 # Cleans up instance after backup
@@ -404,14 +415,18 @@ action :install_client do
   end
   log "  Gem reload forced with Gem.clear_paths"
 
-  #This package causes conflicts with collectd-mysql and innotop
-  #Removing it after building mysql gem
-  package "Percona-Server-devel-56" do
-    action :remove
-    options "--nodeps"
-    ignore_failure true
-    provider Chef::Provider::Package::Rpm
+  case version
+  when "5.6"
+    #This package causes conflicts with collectd-mysql and innotop
+    #Removing it after building mysql gem
+    package "Percona-Server-devel-56" do
+      action :remove
+      options "--nodeps"
+      ignore_failure true
+      provider Chef::Provider::Package::Rpm
+    end
   end
+
 end
 
 # Installs MySQL database server
