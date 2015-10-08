@@ -262,18 +262,21 @@ action :pre_backup_check do
   # See cookbooks/db_mysql/libraries/helper.rb for the "init" method.
   # See "rightscale_tools" gem for the "pre_backup_check" method.
 
-  case node[:platform]
-   when "centos"
-     #fooling righscale_tools gem to make it use service mysql instead of mysqld
-     `cp /etc/centos-release /etc/centos-release_back`
-     `echo "CentOS release 5.7 (Final)"> /etc/centos-release`
-     @db = init(new_resource)
-     @db.pre_backup_check
-     `cp /etc/centos-release_back /etc/centos-release`
-   else
-     @db = init(new_resource)
-     @db.pre_backup_check
-   end
+  version = new_resource.db_version
+  case version
+  when "5.6"
+    if node[:platform] == "centos"
+      mysql_running=system( "service mysql status" )
+      if mysql_running
+        log "Passed the check. Continuing..."
+      else
+        raise "Mysql service is not started"
+      end
+    end
+  else
+    @db = init(new_resource)
+    @db.pre_backup_check
+  end
 end
 
 # Cleans up instance after backup
