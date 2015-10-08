@@ -154,8 +154,21 @@ end
 action :pre_restore_check do
   # See cookbooks/db_mysql/libraries/helper.rb for the "init" method.
   # See "rightscale_tools" gem for the "pre_restore_sanity_check" method.
-  @db = init(new_resource)
-  @db.pre_restore_sanity_check
+  version = new_resource.db_version
+  case version
+  when "5.6"
+    if node[:platform] == "centos"
+      mysql_running=system( "service mysql status" )
+      if mysql_running
+        log "Passed the check. Continuing..."
+      else
+        raise "Mysql service is not started"
+      end
+    end
+  else
+    @db = init(new_resource)
+    @db.pre_restore_sanity_check
+  end
 end
 
 # Validates the restored backup and cleans up the instance after restore.
@@ -235,6 +248,15 @@ action :post_restore_cleanup do
   @db = init(new_resource)
   @db.post_restore_cleanup
 
+  version = new_resource.db_version
+  case version
+  when "5.6"
+    #remove auto.cnf in order to let it be recreated and avoid
+    #"master and slave have equal MySQL server UUIDs" error
+    auto_cnf = node[:db][:data_dir].concat("/auto.cnf")
+    FileUtils.rm_rf(auto_cnf)
+  end
+
   if run_mysql_upgrade
     # Calls the "start" action.
     db node[:db][:data_dir] do
@@ -261,8 +283,22 @@ end
 action :pre_backup_check do
   # See cookbooks/db_mysql/libraries/helper.rb for the "init" method.
   # See "rightscale_tools" gem for the "pre_backup_check" method.
-  @db = init(new_resource)
-  @db.pre_backup_check
+
+  version = new_resource.db_version
+  case version
+  when "5.6"
+    if node[:platform] == "centos"
+      mysql_running=system( "service mysql status" )
+      if mysql_running
+        log "Passed the check. Continuing..."
+      else
+        raise "Mysql service is not started"
+      end
+    end
+  else
+    @db = init(new_resource)
+    @db.pre_backup_check
+  end
 end
 
 # Cleans up instance after backup
@@ -352,11 +388,11 @@ action :install_client do
 
     node[:db_mysql][:client_packages_install] = value_for_platform(
       ["centos", "redhat"] => {
-        "default" => ["percona-server-client-5.6"]
+        "default" => ["Percona-Server-client-56", "Percona-Server-devel-56"]
       },
       "ubuntu" => {
         "10.04" => [],
-        "default" => ["libmysqlclient-dev","percona-server-client-5.6"]
+        "default" => ["libmysqlclient-dev","percona-server-client-56"]
       },
       "default" => []
     )
@@ -403,6 +439,18 @@ action :install_client do
     end
   end
   log "  Gem reload forced with Gem.clear_paths"
+
+  case version
+  when "5.6"
+    #This package causes conflicts with collectd-mysql and innotop
+    #Removing it after building mysql gem
+    package "Percona-Server-devel-56" do
+      action :remove
+      options "--nodeps"
+      ignore_failure true
+      provider Chef::Provider::Package::Rpm
+    end
+  end
 
 end
 

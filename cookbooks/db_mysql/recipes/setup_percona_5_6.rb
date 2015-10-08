@@ -33,7 +33,7 @@ node[:db_mysql][:service_name] = value_for_platform(
     "10.04" => "",
     "default" => "mysql"
   },
-  "default" => "mysqld"
+  "default" => "mysql"
 )
 
 node[:db_mysql][:server_packages_uninstall] = []
@@ -43,7 +43,7 @@ node[:db_mysql][:server_packages_install] = value_for_platform(
     "10.04" => [],
     "default" => ["percona-server-server-5.6", "percona-toolkit", "percona-playback"]
   },
-  "default" => ["percona-server-server-5.6", "percona-toolkit", "percona-playback"]
+  "default" => ["Percona-Server-server-56"]
 )
 
 node[:db][:init_timeout] = node[:db_mysql][:init_timeout]
@@ -54,12 +54,14 @@ node[:db][:info_file_location] = "/etc/mysql"
 
 log "  Using MySQL service name: #{node[:db_mysql][:service_name]}"
 
-case platform
+case node[:platform]
 when "redhat", "centos"
-  execute "yum-add-percona-repo" do
+  r = execute "yum-add-percona-repo" do
     command "yum install -y http://www.percona.com/downloads/percona-release/redhat/0.1-3/percona-release-0.1-3.noarch.rpm"
-    action :run
+    action :nothing
+    not_if "rpm -qa|grep -q percona-release"
   end
+  r.run_action(:run)
 when "ubuntu"
   include_recipe "apt"
   

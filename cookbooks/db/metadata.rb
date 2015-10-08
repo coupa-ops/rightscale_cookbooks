@@ -33,6 +33,7 @@ recipe "db::setup_monitoring",
   "Installs the collectd plugin for database monitoring support, which is" +
   " required to enable monitoring and alerting functionality for your servers."
 
+recipe "db::create_ephemeral" , "Creates a volume as /mnt/ephemeral."
 # == Common Database Recipes
 #
 recipe "db::do_primary_backup",
@@ -706,3 +707,44 @@ attribute "db/force_promote",
   :default => "false",
   :choice => ["true", "false"],
   :recipes => ["db::do_promote_to_master"]
+
+attribute "db/ephemeral__iops",
+  :description  => "Number of io operations per second for PIOPS volumes",
+  :recipes      => ["db::create_ephemeral"],
+  :type         => "string",
+  :display_name => "ephemeral_iops",
+  :required     => "optional"
+
+attribute "db/ephemeral__stripe_count",
+  :description  => "Number of volumes for use with striped volume. Default is 1 which means no striping",
+  :recipes      => ["db::create_ephemeral"],
+  :type         => "string",
+  :display_name => "ephemeral_stripe_count",
+  :required     => "optional",
+  :default      => "1"
+
+attribute "db/ephemeral_vg_data_percentage",
+  :description  => "The percentage of the total Volume Group extents (LVM) that is used for data.",
+  :recipes      => ["db::create_ephemeral"],
+  :type         => "string",
+  :display_name => "ephemeral_vg_data_percentage",
+  :required     => "optional",
+  :default      => "90"
+
+attribute "db/ephemeral__volume_size",
+  :description  => "Total volume size in GB.",
+  :recipes      => ["db::create_ephemeral"],
+  :type         => "string",
+  :display_name => "ephemeral_volume_size",
+  :required     => "recommended",
+  :default      => "10"
+
+=begin
+attribute "db/ephemeral_volume_nickname",
+  :description  => "The name displayed in the dashboard for volumes and to uniquely identify LVM volume groups.",
+  :recipes      => ["db::create_ephemeral"],
+  :type         => "string",
+  :display_name => "ephemeral_volume_nickname",
+  :required     => "recommended",
+  :default      => "ephemeral"
+=end
