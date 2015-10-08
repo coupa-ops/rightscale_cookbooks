@@ -154,8 +154,21 @@ end
 action :pre_restore_check do
   # See cookbooks/db_mysql/libraries/helper.rb for the "init" method.
   # See "rightscale_tools" gem for the "pre_restore_sanity_check" method.
-  @db = init(new_resource)
-  @db.pre_restore_sanity_check
+  version = new_resource.db_version
+  case version
+  when "5.6"
+    if node[:platform] == "centos"
+      mysql_running=system( "service mysql status" )
+      if mysql_running
+        log "Passed the check. Continuing..."
+      else
+        raise "Mysql service is not started"
+      end
+    end
+  else
+    @db = init(new_resource)
+    @db.pre_restore_sanity_check
+  end
 end
 
 # Validates the restored backup and cleans up the instance after restore.
