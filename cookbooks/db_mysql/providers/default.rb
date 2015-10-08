@@ -209,31 +209,6 @@ action :post_restore_cleanup do
     ::File.symlink(node[:db][:data_dir], default_datadir)
   end
 
-  # Compares size of node[:db_mysql][:tunable][:innodb_log_file_size] to
-  # actual size of restored /var/lib/mysql/ib_logfile0 (symlink).
-  innodb_log_file_size_to_bytes =
-    case node[:db_mysql][:tunable][:innodb_log_file_size]
-    when /^(\d+)[Kk]$/
-      $1.to_i * 1024
-    when /^(\d+)[Mm]$/
-      $1.to_i * 1024**2
-    when /^(\d+)[Gg]$/
-      $1.to_i * 1024**3
-    when /^(\d+)$/
-      $1
-    else
-      raise "FATAL: unknown log file size"
-    end
-
-  if ::File.stat("/var/lib/mysql/ib_logfile0").size == innodb_log_file_size_to_bytes
-    Chef::Log.info "  innodb log file sizes the same... OK."
-  else # warn if sizes do not match
-    Chef::Log.warn "  innodb log file size does not match."
-    Chef::Log.warn "  Updating my.cnf to match log file from snapshot."
-    Chef::Log.warn "  Discovered size: #{::File.stat("/var/lib/mysql/ib_logfile0").size}"
-    Chef::Log.warn "  Expected size: #{innodb_log_file_size_to_bytes}"
-  end
-
   # Always update the my.cnf file on a restore.
   # See cookbooks/db_mysql/definitions/db_mysql_set_mycnf.rb
   # for the "db_mysql_set_mycnf" definition.
@@ -242,9 +217,17 @@ action :post_restore_cleanup do
   db_mysql_set_mycnf "setup_mycnf" do
     server_id RightScale::Database::MySQL::Helper.mycnf_uuid(node)
     relay_log RightScale::Database::MySQL::Helper.mycnf_relay_log(node)
-    innodb_log_file_size ::File.stat("/var/lib/mysql/ib_logfile0").size
     compressed_protocol node[:db_mysql][:compressed_protocol] ==
       "enabled" ? true : false
+  end
+
+  # The database server socket file may have been included in the backup
+  # and restored.  Specifically on mysql 5.1, the server will fail to start
+  # if this socket exists.  This socket file should be removed before starting.
+  if ::File.exists?(node[:db][:socket])
+    Chef::Log.info "Restored data included socket." +
+      " Removing restored socket file '#{node[:db][:socket]}'."
+    FileUtils.rm_rf(node[:db][:socket])
   end
 
   # See cookbooks/db_mysql/libraries/helper.rb for the "init" method.
@@ -255,25 +238,21 @@ action :post_restore_cleanup do
   if run_mysql_upgrade
     # Calls the "start" action.
     db node[:db][:data_dir] do
-      action :nothing
+      action :start
       persist false
-    end.run_action(:start)
+    end
 
-    output = %x[mysql_upgrade]
-    exitstatus = $?
-    Chef::Log.info output
-
-    if exitstatus.success?
-      Chef::Log.info "  mysql_upgrade ran successfully."
-    else
-      raise "FATAL: mysql_upgrade execution failed!"
+    # Execute mysql_upgrade.
+    execute 'mysql upgrade command' do
+      command 'mysql_upgrade'
+      action :run
     end
 
     # Calls the "stop" action.
     db node[:db][:data_dir] do
-      action :nothing
+      action :stop
       persist false
-    end.run_action(:stop)
+    end
   end
 
 end
@@ -337,7 +316,6 @@ action :install_client do
       },
       "default" => []
     )
-
   when "5.5"
     # CentOS/RedHat 6 by default has mysql-libs 5.1 installed as requirement for postfix.
     # Will uninstall mysql-libs, install mysql55-lib.
@@ -357,6 +335,28 @@ action :install_client do
       "ubuntu" => {
         "10.04" => [],
         "default" => ["libmysqlclient-dev", "mysql-client-5.5"]
+      },
+      "default" => []
+    )
+
+  when "5.6"
+    # CentOS/RedHat 6 by default has mysql-libs 5.1 installed as requirement for postfix.
+    # Will uninstall mysql-libs, install mysql55-lib.
+    node[:db_mysql][:client_packages_uninstall] = value_for_platform(
+      ["centos", "redhat"] => {
+        "5.8" => [],
+        "default" => ["mysql-libs"]
+      },
+      "default" => []
+    )
+
+    node[:db_mysql][:client_packages_install] = value_for_platform(
+      ["centos", "redhat"] => {
+        "default" => ["percona-server-client-5.6"]
+      },
+      "ubuntu" => {
+        "10.04" => [],
+        "default" => ["libmysqlclient-dev","percona-server-client-5.6"]
       },
       "default" => []
     )
@@ -449,8 +449,9 @@ action :install_server do
     not_if { ::File.exists?(touchfile) }
     block do
       require 'fileutils'
-      remove_files = ::Dir.glob(::File.join(node[:db_mysql][:datadir], 'ib_logfile*')) + ::Dir.glob(::File.join(node[:db_mysql][:datadir], 'ibdata*'))
-      FileUtils.rm_rf(remove_files)
+      #Not needed starting from 5.6.8
+      #remove_files = ::Dir.glob(::File.join(node[:db_mysql][:datadir], 'ib_logfile*')) + ::Dir.glob(::File.join(node[:db_mysql][:datadir], 'ibdata*'))
+      #FileUtils.rm_rf(remove_files)
       ::File.open(touchfile, 'a') {}
     end
   end
@@ -582,7 +583,6 @@ action :install_server do
   db_mysql_set_mycnf "setup_mycnf" do
     server_id RightScale::Database::MySQL::Helper.mycnf_uuid(node)
     relay_log RightScale::Database::MySQL::Helper.mycnf_relay_log(node)
-    innodb_log_file_size ::File.size?("/var/lib/mysql/ib_logfile0")
     compressed_protocol node[:db_mysql][:compressed_protocol] ==
       "enabled" ? true : false
   end
@@ -646,6 +646,13 @@ action :install_server do
     flags "-ex"
     code <<-EOH
       chown -R mysql:mysql #{dir}
+    EOH
+  end
+
+  bash "increase mysql init script timeouts" do
+    flags "-ex"
+    code <<-EOH
+      sed -i 's/sleep 1/sleep 2/g' /etc/init.d/mysql
     EOH
   end
 
@@ -771,10 +778,10 @@ action :setup_monitoring do
 
   ruby_block "evaluate db type" do
     block do
-      if node[:db][:init_status].to_sym == :initialized
-        node[:db_mysql][:collectd_master_slave_mode] = (node[:db][:this_is_master] == true ? "Master" : "Slave") + "Stats true"
+      node[:db_mysql][:collectd_master_slave_mode] = if node[:db][:this_is_master] == true
+        "MasterStats true"
       else
-        node[:db_mysql][:collectd_master_slave_mode] = ""
+        "SlaveStats true\n  SlaveNotifications true"
       end
     end
   end
@@ -785,10 +792,8 @@ action :setup_monitoring do
 
   platform = node[:platform]
   # Installs CentOS specific items.
-  collectd_version = node[:rightscale][:collectd_packages_version]
   package "collectd-mysql" do
     action :install
-    version "#{collectd_version}" unless collectd_version == "latest"
     only_if { platform =~ /redhat|centos/ }
   end
 
@@ -799,8 +804,7 @@ action :setup_monitoring do
     cookbook "db_mysql"
     notifies :restart, resources(:service => "collectd")
     variables(
-      :collectd_master_slave_mode =>
-        node[:db_mysql][:collectd_master_slave_mode]
+      :collectd_master_slave_mode => node[:db_mysql][:collectd_master_slave_mode]
     )
   end
 
@@ -858,7 +862,6 @@ action :promote do
   db_mysql_set_mycnf "setup_mycnf" do
     server_id RightScale::Database::MySQL::Helper.mycnf_uuid(node)
     relay_log RightScale::Database::MySQL::Helper.mycnf_relay_log(node)
-    innodb_log_file_size ::File.stat("/var/lib/mysql/ib_logfile0").size
     compressed_protocol node[:db_mysql][:compressed_protocol] ==
       "enabled" ? true : false
   end
@@ -1093,7 +1096,6 @@ action :enable_replication do
     db_mysql_set_mycnf "setup_mycnf" do
       server_id RightScale::Database::MySQL::Helper.mycnf_uuid(node)
       relay_log RightScale::Database::MySQL::Helper.mycnf_relay_log(node)
-      innodb_log_file_size ::File.stat("/var/lib/mysql/ib_logfile0").size
       compressed_protocol node[:db_mysql][:compressed_protocol] ==
         "enabled" ? true : false
     end
