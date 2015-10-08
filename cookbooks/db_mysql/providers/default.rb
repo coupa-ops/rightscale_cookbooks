@@ -382,7 +382,7 @@ action :install_client do
     node[:db_mysql][:client_packages_uninstall] = value_for_platform(
       ["centos", "redhat"] => {
         "5.8" => [],
-        "default" => ["mysql-libs", "mysqlclient16"]
+        "default" => ["mysql-libs", "mysqlclient16", "collectd-mysql"]
       },
       "default" => []
     )
