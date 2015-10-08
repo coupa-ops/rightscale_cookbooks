@@ -248,6 +248,15 @@ action :post_restore_cleanup do
   @db = init(new_resource)
   @db.post_restore_cleanup
 
+  version = new_resource.db_version
+  case version
+  when "5.6"
+    #remove auto.cnf in order to let it be recreated and avoid
+    #"master and slave have equal MySQL server UUIDs" error
+    auto_cnf = node[:db][:data_dir].concat("/auto.cnf")
+    FileUtils.rm_rf(auto_cnf)
+  end
+
   if run_mysql_upgrade
     # Calls the "start" action.
     db node[:db][:data_dir] do
