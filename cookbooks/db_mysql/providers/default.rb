@@ -253,7 +253,8 @@ action :post_restore_cleanup do
   when "5.6"
     #remove auto.cnf in order to let it be recreated and avoid
     #"master and slave have equal MySQL server UUIDs" error
-    auto_cnf = node[:db][:data_dir].concat("/auto.cnf")
+    auto_cnf = node[:db][:data_dir]
+    auto_cnf.concat("/auto.cnf")
     FileUtils.rm_rf(auto_cnf)
   end
 
@@ -381,7 +382,7 @@ action :install_client do
     node[:db_mysql][:client_packages_uninstall] = value_for_platform(
       ["centos", "redhat"] => {
         "5.8" => [],
-        "default" => ["mysql-libs"]
+        "default" => ["mysql-libs", "mysqlclient16", "collectd-mysql"]
       },
       "default" => []
     )
