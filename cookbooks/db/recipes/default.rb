@@ -22,7 +22,7 @@ db_vers = node[:db][:version]
                 if device
                   mount_point = node[:block_device][:devices][:device1][:mount_point] if node[:block_device][:devices].include?(:device1)
                   if !mount_point.nil? && !mount_point.empty?
-                    node[:db][:data_dir] = mount_point.concat("/mysql")
+                    node[:db][:data_dir] = mount_point #.concat("/mysql")
                   end
                 end
 
