@@ -253,9 +253,9 @@ action :post_restore_cleanup do
   when "5.6"
     #remove auto.cnf in order to let it be recreated and avoid
     #"master and slave have equal MySQL server UUIDs" error
-    auto_cnf = node[:db][:data_dir]
+    auto_cnf = "#{node[:db][:data_dir]}"
     auto_cnf.concat("/auto.cnf")
-    FileUtils.rm_rf(auto_cnf)
+    ::File.delete(auto_cnf)
   end
 
   if run_mysql_upgrade
