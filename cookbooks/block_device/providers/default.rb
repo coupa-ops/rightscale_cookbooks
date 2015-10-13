@@ -31,13 +31,13 @@ action :restore_or_create_new do
           #if backup.empty?
           backup.first.show
         #end
-  =begin
+=begin
   @api.find_latest_backup(
             lineage,
             from_master,
             timestamp
           )
-  =end
+=end
   #run_context.include_recipe "block_device::do_primary_restore"
 end
 
