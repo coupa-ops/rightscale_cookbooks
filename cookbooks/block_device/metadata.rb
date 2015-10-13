@@ -58,7 +58,7 @@ recipe "block_device::do_force_reset",
   " Designed for test and development purposes only. WARNING:" +
   " Execution of this script will delete any data on your block device!"
 
-recipe "block_device::do_restore_or_create_new"
+recipe "block_device::do_restore_or_create_new",
   "Restores volume from a primary backup or creates new volume if backup does not exist." 
 
 # all recipes EXCEPT for block_device::default
