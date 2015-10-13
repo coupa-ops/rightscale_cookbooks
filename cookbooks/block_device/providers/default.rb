@@ -27,13 +27,15 @@ action :restore_or_create_new do
     Chef::Log.info "Did not find any snapshots in lineage: '#{lineage}' from_master: '#{from_master}' timestamp: '#{timestamp}'. Creating new volume"
     run_context.include_recipe "block_device::setup_block_device"
     run_context.include_recipe "block_device::do_primary_backup"
-    run_context.include_recipe "block_device::do_primary_backup_schedule_enable"
+    #causes errors when running in boot sequence
+    #run_context.include_recipe "block_device::do_primary_backup_schedule_enable"
   else
     Chef::Log.info "Found matching snapshot in lineage: '#{lineage}' from_master: '#{from_master}' timestamp: '#{timestamp}'. Doing primary restore"
     backup.first.show
     run_context.include_recipe "block_device::do_primary_restore"
     run_context.include_recipe "block_device::do_primary_backup"
-    run_context.include_recipe "block_device::do_primary_backup_schedule_enable"
+    #causes errors when running in boot sequence
+    #run_context.include_recipe "block_device::do_primary_backup_schedule_enable"
   end
 
 end
