@@ -10,6 +10,37 @@
 
 include RightScale::BlockDeviceHelper
 
+action :restore_or_create_new do
+
+  device = init(new_resource)
+  lineage = new_resource.lineage
+  from_master = new_resource.is_master
+  timestamp = new_resource.timestamp_override == "" ?
+      nil : new_resource.timestamp_override
+  options = {}
+  #Signal.trap('EXIT') { run_context.include_recipe "block_device::setup_block_device" }
+  
+  @api = RightScale::Tools::API.factory('1.5', options)
+  @api.initialize(options)
+          #def find_latest_backup(lineage, from_master = nil, timestamp = nil)
+          # the 1.5 API does not do an inclusive search for timestamp so increment by 1
+          timestamp = timestamp ? Time.at(timestamp.to_i + 1) : Time.now
+          filter = [ "latest_before==#{timestamp.utc.strftime('%Y/%m/%d %H:%M:%S %z')}", "committed==true", "completed==true" ]
+          filter << "from_master==true" if from_master
+          backup = @client.backups.index(:lineage => lineage, :filter => filter )
+          #if backup.empty?
+          backup.first.show
+        #end
+  =begin
+  @api.find_latest_backup(
+            lineage,
+            from_master,
+            timestamp
+          )
+  =end
+  #run_context.include_recipe "block_device::do_primary_restore"
+end
+
 # Sets up new block device
 action :create do
   # Initialize new device by setting up resource attributes.

@@ -58,6 +58,9 @@ recipe "block_device::do_force_reset",
   " Designed for test and development purposes only. WARNING:" +
   " Execution of this script will delete any data on your block device!"
 
+recipe "block_device::do_restore_or_create_new"
+  "Restores volume from a primary backup or creates new volume if backup does not exist." 
+
 # all recipes EXCEPT for block_device::default
 # which is used to "export" inputs to other cookbooks.
 all_recipes = [
@@ -68,12 +71,14 @@ all_recipes = [
   "block_device::do_primary_backup_schedule_enable",
   "block_device::do_primary_backup_schedule_disable",
   "block_device::setup_block_device",
-  "block_device::do_force_reset"
+  "block_device::do_force_reset",
+  "block_device::do_restore_or_create_new"
 ]
 
 restore_recipes = [
   "block_device::do_primary_restore",
-  "block_device::do_secondary_restore"
+  "block_device::do_secondary_restore",
+  "block_device::do_restore_or_create_new"
 ]
 
 backup_recipes = [
@@ -280,7 +285,7 @@ end.each do |device, number|
       " (e.g., Rackspace). Example: 1",
     :required => device != 'device2' ? 'recommended' : 'optional',
     :default => "1",
-    :recipes => ["block_device::setup_block_device", "block_device::default"]
+    :recipes => ["block_device::setup_block_device", "block_device::default", "block_device::do_restore_or_create_new"]
 
   attribute "block_device/devices/#{device}/volume_size",
     :display_name => "Total Volume Size (#{number})",
@@ -293,7 +298,7 @@ end.each do |device, number|
       " on clouds that do not support volumes (e.g., Rackspace). Example: 10",
     :required => device != 'device2' ? 'recommended' : 'optional',
     :default => "10",
-    :recipes => ["block_device::setup_block_device", "block_device::default"]
+    :recipes => ["block_device::setup_block_device", "block_device::default", "block_device::do_restore_or_create_new"]
 
   attribute "block_device/devices/#{device}/backup/lineage",
     :display_name => "Backup Lineage (#{number})",
@@ -435,7 +440,7 @@ end.each do |device, number|
     :type => "string",
     :required => device != 'device2' ? 'recommended' : 'optional',
     :default => "/mnt/storage#{number}",
-    :recipes => ["block_device::setup_block_device", "block_device::default"]
+    :recipes => ["block_device::setup_block_device", "block_device::default", "block_device::do_restore_or_create_new"]
 
   attribute "block_device/devices/#{device}/vg_data_percentage",
     :display_name => "Percentage of the LVM used for data (#{number})",
@@ -452,7 +457,7 @@ end.each do |device, number|
     :required => 'optional',
     :choice => ["50", "60", "70", "80", "90", "100"],
     :default => "90",
-    :recipes => ["block_device::setup_block_device", "block_device::default"]
+    :recipes => ["block_device::setup_block_device", "block_device::default", "block_device::do_restore_or_create_new"]
 
   attribute "block_device/devices/#{device}/iops",
     :display_name => "I/O Operations per Second (#{number})",
@@ -462,7 +467,7 @@ end.each do |device, number|
       " Example: 500",
     :type => "string",
     :required => "optional",
-    :recipes => ["block_device::setup_block_device", "block_device::default"]
+    :recipes => ["block_device::setup_block_device", "block_device::default", "block_device::do_restore_or_create_new"]
 
   attribute "block_device/devices/#{device}/volume_type",
     :display_name => "Volume Type",
@@ -473,7 +478,7 @@ end.each do |device, number|
     :required => "optional",
     :choice => ["SATA", "SSD"],
     :default => "SATA",
-    :recipes => ["block_device::setup_block_device", "block_device::default"]
+    :recipes => ["block_device::setup_block_device", "block_device::default", "block_device::do_restore_or_create_new"]
 end
 
 attribute "block_device/terminate_safety",

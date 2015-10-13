@@ -183,3 +183,6 @@ actions :backup_schedule_enable
 
 # Disables cron-based scheduled backups
 actions :backup_schedule_disable
+
+# Restores volume from a primary backup or creates new volume if backup does not exist
+actions :restore_or_create_new
