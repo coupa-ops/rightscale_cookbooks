@@ -79,8 +79,8 @@ end.each do |device, number|
   default[:block_device][:devices][device][:nickname] = "data_storage#{number}"
   default[:block_device][:devices][device][:backup][:lineage_override] = ""
   default[:block_device][:devices][device][:backup][:timestamp_override] = ""
-  default[:block_device][:devices][device][:backup][:primary][:cron][:minute] = ""
-  default[:block_device][:devices][device][:backup][:primary][:cron][:hour] = ""
+  default[:block_device][:devices][device][:backup][:primary][:cron][:hour] = "*" # Every hour
+  default[:block_device][:devices][device][:backup][:primary][:cron][:minute] = "#{5+rand(50)}"
   default[:block_device][:devices][device][:backup][:primary][:keep][:max_snapshots] = "60"
   default[:block_device][:devices][device][:backup][:primary][:keep][:daily] = "14"
   default[:block_device][:devices][device][:backup][:primary][:keep][:weekly] = "6"
