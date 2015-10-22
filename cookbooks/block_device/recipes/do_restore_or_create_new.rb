@@ -27,6 +27,12 @@ end
 #
 do_for_block_devices node[:block_device] do |device|
 
+  mount_point = get_device_or_default(node, device, :mount_point)
+  platform = ::RightScale::Tools::Platform.factory
+  device_exists = platform.get_device_for_mount_point(mount_point)
+  log "#{device_exists} already exists at #{mount_point}" if device_exists
+  return if device_exists
+
   # Do the restore.
   log "  Creating block device and restoring data from primary backup for device #{device}..."
   restore_lineage, restore_timestamp_override = set_restore_params(
