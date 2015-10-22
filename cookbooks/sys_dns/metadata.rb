@@ -115,7 +115,7 @@ attribute "sys_dns/ids",
     " your DNS provider, a 7-digit number is used (e.g., 4403234)." +
     " If you are using Cloud DNS, provide both Domain ID and Record ID" +
     " (e.g., DomainID:A-RecordID). Example: 111021, 111022",
-  :required => "require",
+  :required => "required",
   :recipes => [
     "sys_dns::do_set_multiple_private"
   ]
