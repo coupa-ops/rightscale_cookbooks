@@ -105,7 +105,7 @@ attribute "sys_dns/region",
   ]
 
 attribute "sys_dns/ids",
-  :display_name => "Cloud DNS region",
+  :display_name => "DNS Record IDs",
   :description =>
     "A comma-separated list of the unique identifiers that is associated with the DNS A records" +
     " of the server. The unique identifier is assigned by the DNS provider" +
