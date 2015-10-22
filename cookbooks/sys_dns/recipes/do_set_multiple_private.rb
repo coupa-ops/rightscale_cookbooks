@@ -13,7 +13,7 @@ rightscale_marker
 rec_ids=node[:sys_dns][:ids].split(',')
 log "Setting DNS records identified by the array of ids: #{rec_ids}"
 rec_ids.each do |rec_id|
-  sys_dns "#{rec_id}" do
+  sys_dns "default" do
     id rec_id
     address node[:cloud][:private_ips][0]
     region node[:sys_dns][:region]
