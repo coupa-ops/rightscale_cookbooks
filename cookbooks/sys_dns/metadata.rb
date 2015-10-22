@@ -23,6 +23,9 @@ recipe "sys_dns::do_set_private",
 recipe "sys_dns::do_set_public",
   "Sets the dynamic DNS entry to the first public IP of the server."
 
+recipe "sys_dns::do_set_multiple_private",
+  "Sets a list of the dynamic DNS entries to the first private IP of the server."
+
 attribute "sys_dns/choice",
   :display_name => "DNS Service Provider",
   :description =>
@@ -34,6 +37,7 @@ attribute "sys_dns/choice",
   :required => "required",
   :choice => ["DNSMadeEasy", "DynDNS", "Route53", "CloudDNS"],
   :recipes => [
+    "sys_dns::do_set_multiple_private",
     "sys_dns::do_set_private",
     "sys_dns::do_set_public",
     "sys_dns::default"
@@ -63,6 +67,7 @@ attribute "sys_dns/user",
     " (e.g., cred:RACKSPACE_USERNAME). Example: cred:CLOUD_ACCOUNT_USERNAME",
   :required => "required",
   :recipes => [
+    "sys_dns::do_set_multiple_private",
     "sys_dns::do_set_private",
     "sys_dns::do_set_public",
     "sys_dns::default"
@@ -79,6 +84,7 @@ attribute "sys_dns/password",
     " Example: cred:CLOUD_ACCOUNT_KEY ",
   :required => "required",
   :recipes => [
+    "sys_dns::do_set_multiple_private",
     "sys_dns::do_set_private",
     "sys_dns::do_set_public",
     "sys_dns::default"
@@ -92,7 +98,24 @@ attribute "sys_dns/region",
   :required => "optional",
   :choice => ["Chicago", "Dallas", "London"],
   :recipes => [
+    "sys_dns::do_set_multiple_private",
     "sys_dns::do_set_private",
     "sys_dns::do_set_public",
     "sys_dns::default"
+  ]
+
+attribute "sys_dns/ids",
+  :display_name => "Cloud DNS region",
+  :description =>
+    "A comma-separated list of the unique identifiers that is associated with the DNS A records" +
+    " of the server. The unique identifier is assigned by the DNS provider" +
+    " when you create a dynamic DNS A record. This ID is used to update" +
+    " the associated A record with the private IP address of the server" +
+    " when this recipe is run. If you are using DNS Made Easy as" +
+    " your DNS provider, a 7-digit number is used (e.g., 4403234)." +
+    " If you are using Cloud DNS, provide both Domain ID and Record ID" +
+    " (e.g., DomainID:A-RecordID). Example: 111021, 111022",
+  :required => "require",
+  :recipes => [
+    "sys_dns::do_set_multiple_private"
   ]
