@@ -10,7 +10,7 @@ ServerTemplates including the Database Manager ServerTemplates.
 ## REQUIREMENTS:
 
 * An account with the desired DNS service provider.
-* DNS A record’s created external to this cookbook.
+* DNS A records created external to this cookbook.
 
 ## COOKBOOKS DEPENDENCIES:
 
