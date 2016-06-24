@@ -81,6 +81,7 @@ define :db_do_backup, :backup_type => "primary" do
     backup_type do_backup_type.to_sym
 
     action :snapshot
+    ignore_failure true
   end
 
   log "  Performing unlock DB..."
