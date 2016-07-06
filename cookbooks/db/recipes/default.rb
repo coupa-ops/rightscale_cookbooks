@@ -27,8 +27,9 @@ db_vers = node[:db][:version]
                 end
 
                 directory "#{node[:db][:data_dir]}" do
-                  owner "root"
-                  group "root"
+                  # not setting ownership to avoid issues on server restart
+                  # owner "root"
+                  # group "root"
                   mode "0775"
                   action :create
                   recursive true
